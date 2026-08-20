@@ -119,6 +119,20 @@ input {
   text-align: center;
 }
 
+.account-switch {
+  margin-top: 10px;
+}
+
+.text-btn {
+  padding: 0;
+  border: none;
+  background: transparent;
+  color: #111827;
+  font-weight: 700;
+  text-decoration: underline;
+  cursor: pointer;
+}
+
 .app-shell {
   max-width: 1100px;
   margin: 0 auto;
