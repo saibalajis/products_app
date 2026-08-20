@@ -1,6 +1,5 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import '../App.css';
-import Login from './Login';
 
 export default function ProductCatalog({ user, onLogout }) {
   const [products, setProducts] = useState([]);

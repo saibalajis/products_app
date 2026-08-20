@@ -1,11 +1,11 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 
 const credentials = {
   admin: { username: 'admin', password: 'admin123' },
   customer: { username: 'customer', password: 'customer123' },
 };
 
-export default function Login({ onLogin }) {
+export default function Login({ onLogin, users = [], onSwitchToRegister }) {
   const [selectedRole, setSelectedRole] = useState('customer');
   const [formData, setFormData] = useState({ username: '', password: '' });
   const [error, setError] = useState('');
@@ -20,7 +20,10 @@ export default function Login({ onLogin }) {
 
     const enteredUsername = formData.username.trim();
     const enteredPassword = formData.password;
-    const validCredentials = credentials[selectedRole];
+    const validCredentials =
+      selectedRole === 'customer'
+        ? users.find((user) => user.username === enteredUsername) || credentials.customer
+        : credentials.admin;
 
     if (!enteredUsername || !enteredPassword) {
       setError('Please enter your username and password.');
@@ -97,6 +100,12 @@ export default function Login({ onLogin }) {
 
         <p className="demo-note">
           Demo credentials: <strong>admin / admin123</strong> or <strong>customer / customer123</strong>
+        </p>
+        <p className="demo-note account-switch">
+          New customer?{' '}
+          <button type="button" className="text-btn" onClick={onSwitchToRegister}>
+            Create an account
+          </button>
         </p>
       </div>
     </div>
