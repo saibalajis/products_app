@@ -208,6 +208,48 @@ input {
   gap: 20px;
 }
 
+.pagination {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin-top: 28px;
+  flex-wrap: wrap;
+}
+
+.pagination-summary {
+  color: #555;
+  font-size: 0.9rem;
+}
+
+.pagination-controls {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.pagination-btn {
+  min-width: 38px;
+  padding: 8px 10px;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  background: #fff;
+  color: #111827;
+  cursor: pointer;
+}
+
+.pagination-btn.active {
+  background: #111827;
+  color: #fff;
+  border-color: #111827;
+}
+
+.pagination-btn:disabled {
+  color: #9ca3af;
+  cursor: not-allowed;
+  background: #f3f4f6;
+}
+
 .product-card {
   background: #fff;
   border: 1px solid #e5e7eb;
@@ -276,6 +318,11 @@ input {
   }
 
   .toolbar {
+    flex-direction: column;
+  }
+
+  .pagination {
+    align-items: flex-start;
     flex-direction: column;
   }
 }
