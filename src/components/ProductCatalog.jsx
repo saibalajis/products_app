@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import '../App.css';
+import { getProducts } from '../api/productsApi';
 
 export default function ProductCatalog({ user, onLogout }) {
   const [products, setProducts] = useState([]);
@@ -9,16 +10,10 @@ export default function ProductCatalog({ user, onLogout }) {
   const [error, setError] = useState('');
 
   useEffect(() => {
-    async function fetchData() {
+    async function loadProducts() {
       try {
-        const response = await fetch('https://dummyjson.com/products');
-
-        if (!response.ok) {
-          throw new Error('Network response was not ok');
-        }
-
-        const data = await response.json();
-        setProducts(data.products);
+        const productList = await getProducts();
+        setProducts(productList);
       } catch (err) {
         setError(err.message);
       } finally {
@@ -26,7 +21,7 @@ export default function ProductCatalog({ user, onLogout }) {
       }
     }
 
-    fetchData();
+    loadProducts();
   }, []);
 
   const visibleProducts = products.filter((product) => {
