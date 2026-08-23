@@ -1,12 +1,16 @@
 import { useState, useEffect } from 'react';
 import '../App.css';
 import { getProducts } from '../api/productsApi';
+import Pagination from './Pagination';
+
+const PRODUCTS_PER_PAGE = 8;
 
 export default function ProductCatalog({ user, onLogout }) {
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [filter, setFilter] = useState('all');
+  const [currentPage, setCurrentPage] = useState(1);
   const [error, setError] = useState('');
 
   useEffect(() => {
@@ -29,6 +33,11 @@ export default function ProductCatalog({ user, onLogout }) {
     const matchesFilter = filter === 'all' || product.category === filter;
     return matchesSearch && matchesFilter;
   });
+
+  const paginatedProducts = visibleProducts.slice(
+    (currentPage - 1) * PRODUCTS_PER_PAGE,
+    currentPage * PRODUCTS_PER_PAGE,
+  );
 
   return (
     <div className="app-shell">
@@ -56,13 +65,22 @@ export default function ProductCatalog({ user, onLogout }) {
             type="text"
             placeholder="Search products..."
             value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
+            onChange={(e) => {
+              setSearchTerm(e.target.value);
+              setCurrentPage(1);
+            }}
           />
         </label>
 
         <label className="filter-field">
           <span>Category</span>
-          <select value={filter} onChange={(e) => setFilter(e.target.value)}>
+          <select
+            value={filter}
+            onChange={(e) => {
+              setFilter(e.target.value);
+              setCurrentPage(1);
+            }}
+          >
             <option value="all">All</option>
             <option value="beauty">Beauty</option>
             <option value="fragrances">Fragrances</option>
@@ -80,7 +98,7 @@ export default function ProductCatalog({ user, onLogout }) {
       )}
 
       <div className="products-grid">
-        {visibleProducts.map((product) => (
+        {paginatedProducts.map((product) => (
           <article key={product.id} className="product-card">
             <img src={product.thumbnail} alt={product.title} />
             <div className="product-content">
@@ -99,6 +117,15 @@ export default function ProductCatalog({ user, onLogout }) {
           </article>
         ))}
       </div>
+
+      {!loading && !error && visibleProducts.length > 0 && (
+        <Pagination
+          currentPage={currentPage}
+          totalItems={visibleProducts.length}
+          itemsPerPage={PRODUCTS_PER_PAGE}
+          onPageChange={setCurrentPage}
+        />
+      )}
     </div>
   );
 }
