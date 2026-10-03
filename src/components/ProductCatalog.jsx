@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import '../App.css';
 import { getProducts } from '../api/productsApi';
 import Pagination from './Pagination';
+import ProductDetail from './ProductDetail';
 
 const PRODUCTS_PER_PAGE = 8;
 
@@ -12,6 +13,9 @@ export default function ProductCatalog({ user, onLogout }) {
   const [filter, setFilter] = useState('all');
   const [currentPage, setCurrentPage] = useState(1);
   const [error, setError] = useState('');
+  const [selectedProduct, setSelectedProduct] = useState(null);
+  const [cart, setCart] = useState([]);
+  const [cartOpen, setCartOpen] = useState(false);
 
   useEffect(() => {
     async function loadProducts() {
@@ -39,6 +43,28 @@ export default function ProductCatalog({ user, onLogout }) {
     currentPage * PRODUCTS_PER_PAGE,
   );
 
+  const cartCount = cart.reduce((total, item) => total + item.quantity, 0);
+  const cartTotal = cart.reduce((total, item) => total + item.product.price * item.quantity, 0);
+
+  function addToCart(product, quantity = 1) {
+    setCart((previous) => {
+      const existingItem = previous.find((item) => item.product.id === product.id);
+      if (existingItem) {
+        return previous.map((item) => item.product.id === product.id
+          ? { ...item, quantity: item.quantity + quantity }
+          : item);
+      }
+      return [...previous, { product, quantity }];
+    });
+    setCartOpen(true);
+  }
+
+  function updateCartQuantity(productId, quantity) {
+    setCart((previous) => previous
+      .map((item) => item.product.id === productId ? { ...item, quantity } : item)
+      .filter((item) => item.quantity > 0));
+  }
+
   return (
     <div className="app-shell">
       <header className="app-header">
@@ -57,6 +83,24 @@ export default function ProductCatalog({ user, onLogout }) {
           </button>
         </div>
       </header>
+
+      <div className="catalog-cart-bar">
+        <span>{selectedProduct ? 'Product details' : 'Find your next favorite'}</span>
+        <button type="button" className="cart-trigger" onClick={() => setCartOpen(true)}>
+          <span aria-hidden="true">🛒</span> Cart <strong>{cartCount}</strong>
+        </button>
+      </div>
+
+      {selectedProduct ? (
+        <ProductDetail
+          key={selectedProduct.id}
+          product={selectedProduct}
+          products={products}
+          onBack={() => setSelectedProduct(null)}
+          onSelectProduct={setSelectedProduct}
+          onAddToCart={addToCart}
+        />
+      ) : <>
 
       <div className="toolbar">
         <label className="search-field">
@@ -99,7 +143,19 @@ export default function ProductCatalog({ user, onLogout }) {
 
       <div className="products-grid">
         {paginatedProducts.map((product) => (
-          <article key={product.id} className="product-card">
+          <article
+            key={product.id}
+            className="product-card"
+            role="button"
+            tabIndex={0}
+            onClick={() => setSelectedProduct(product)}
+            onKeyDown={(event) => {
+              if (event.key === 'Enter' || event.key === ' ') {
+                event.preventDefault();
+                setSelectedProduct(product);
+              }
+            }}
+          >
             <img src={product.thumbnail} alt={product.title} />
             <div className="product-content">
               <div className="product-meta">
@@ -109,10 +165,11 @@ export default function ProductCatalog({ user, onLogout }) {
               <h3>{product.title}</h3>
               <p>{product.description}</p>
               {user.role === 'admin' && (
-                <button type="button" className="manage-btn">
+                <button type="button" className="manage-btn" onClick={(event) => event.stopPropagation()}>
                   Manage product
                 </button>
               )}
+              <span className="view-product-hint">View product details →</span>
             </div>
           </article>
         ))}
@@ -125,6 +182,50 @@ export default function ProductCatalog({ user, onLogout }) {
           itemsPerPage={PRODUCTS_PER_PAGE}
           onPageChange={setCurrentPage}
         />
+      )}
+      </>}
+
+      {cartOpen && (
+        <div className="cart-backdrop" onClick={() => setCartOpen(false)}>
+          <aside
+            className="cart-drawer"
+            aria-label="Shopping cart"
+            onClick={(event) => event.stopPropagation()}
+          >
+            <div className="cart-drawer-header">
+              <div><p className="section-kicker">Your order</p><h2>Shopping cart ({cartCount})</h2></div>
+              <button type="button" className="close-cart" onClick={() => setCartOpen(false)} aria-label="Close cart">×</button>
+            </div>
+            {cart.length === 0 ? (
+              <div className="empty-cart"><span aria-hidden="true">🛍️</span><h3>Your cart is empty</h3><p>Explore the catalog and add something you love.</p></div>
+            ) : (
+              <>
+                <div className="cart-items">
+                  {cart.map(({ product, quantity }) => (
+                    <article className="cart-item" key={product.id}>
+                      <img src={product.thumbnail} alt={product.title} />
+                      <div className="cart-item-info">
+                        <strong>{product.title}</strong>
+                        <span>${product.price.toFixed(2)}</span>
+                        <div className="cart-quantity">
+                          <button type="button" onClick={() => updateCartQuantity(product.id, quantity - 1)} aria-label={`Remove one ${product.title}`}>−</button>
+                          <span>{quantity}</span>
+                          <button type="button" onClick={() => updateCartQuantity(product.id, quantity + 1)} aria-label={`Add one ${product.title}`}>+</button>
+                        </div>
+                      </div>
+                      <strong>${(product.price * quantity).toFixed(2)}</strong>
+                    </article>
+                  ))}
+                </div>
+                <div className="cart-checkout">
+                  <div><span>Subtotal</span><strong>${cartTotal.toFixed(2)}</strong></div>
+                  <p>Shipping and taxes calculated at checkout.</p>
+                  <button type="button" onClick={() => setCartOpen(false)}>Continue shopping</button>
+                </div>
+              </>
+            )}
+          </aside>
+        </div>
       )}
     </div>
   );
